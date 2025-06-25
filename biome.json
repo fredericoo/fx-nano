@@ -1,0 +1,79 @@
+{
+	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"vcs": {
+		"enabled": false,
+		"clientKind": "git",
+		"defaultBranch": "main",
+		"useIgnoreFile": false
+	},
+	"files": {
+		"ignoreUnknown": false,
+		"include": ["src/**/*", "tsconfig.json", "biome.json"],
+		"ignore": ["**/node_modules/**/*", "**/dist/**/*"]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 120
+	},
+	"organizeImports": {
+		"enabled": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"suspicious": {
+				"noArrayIndexKey": "off",
+				"recommended": true,
+				"noConsole": "off",
+				"noExplicitAny": "off"
+			},
+
+			"style": {
+				"recommended": true
+			},
+			"complexity": {
+				"recommended": true
+			},
+			"security": {
+				"recommended": true
+			},
+			"performance": {
+				"recommended": true
+			},
+			"correctness": {
+				"recommended": true,
+				"noUnusedImports": "error",
+				"noUnusedVariables": "error",
+				"noUnusedLabels": "error",
+				"noUnusedFunctionParameters": "error"
+			},
+			"a11y": {
+				"recommended": true,
+				"noLabelWithoutControl": "off",
+				"useFocusableInteractive": "off"
+			},
+			"nursery": {
+				"recommended": true,
+				"noProcessEnv": "off",
+				"useConsistentMemberAccessibility": "off",
+				"useAriaPropsSupportedByRole": "off",
+				"useSortedClasses": {
+					"level": "warn",
+					"fix": "unsafe",
+					"options": {
+						"attributes": ["classList"],
+						"functions": ["clsx", "cva", "tw", "tw.*"]
+					}
+				}
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"semicolons": "always",
+			"quoteStyle": "single"
+		}
+	}
+}
