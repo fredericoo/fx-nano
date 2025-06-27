@@ -20,7 +20,7 @@
     "access": "public"
   },
   "scripts": {
-    "lint": "eslint --cache .",
+    "lint": "biome check .",
     "lint:fix": "pnpm run lint --fix",
     "build": "tsdown",
     "dev": "tsdown --watch",
