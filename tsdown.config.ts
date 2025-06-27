@@ -2,7 +2,7 @@ import { defineConfig } from 'tsdown'
 
 export default defineConfig([
   {
-    entry: ['./src/index.ts'],
+    entry: ['./src/result.ts', './src/error/index.ts', './src/error/valibot.ts'],
     platform: 'neutral',
     dts: true,
   },

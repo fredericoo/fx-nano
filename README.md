@@ -12,7 +12,7 @@ even the most robust libraries don’t actually return type-safe errors because 
 
 e.g.:
 ```ts
-const getPokemonSpriteImage = async (name: string) => {
+const getPokemonSpriteImage = async (name: string): string => {
   const res = await fetch(`https://pokeapi.co/api/v2/${name}`);
   const json = await res.json();
   if (typeof json.sprites.front_default === 'string') return json.sprites.front_default;
@@ -30,7 +30,7 @@ you can make it type-safe by first returning `fx.ok` or `fx.fail`:
 ```ts
 import { fx } from "fx-nano";
 
-const getPokemonSpriteImage = async (name: string) => {
+const getPokemonSpriteImage = async (name: string): Result<"Missing sprite", string> => {
   const res = await fetch(`https://pokeapi.co/api/v2/${name}`);
   const json = await res.json();
   if (typeof json.sprites.front_default === 'string') return fx.ok(json.sprites.front_default);
