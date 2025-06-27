@@ -1,17 +1,19 @@
 {
   "name": "fx-nano",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "packageManager": "pnpm@10.11.0",
   "type": "module",
   "license": "MIT",
   "files": [
     "dist"
   ],
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/result.js",
+  "module": "./dist/result.js",
+  "types": "./dist/result.d.ts",
   "exports": {
-    ".": "./dist/index.js",
+    "./result": "./dist/result.js",
+    "./error": "./dist/error/index.js",
+    "./error/valibot": "./dist/error/valibot.js",
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -34,7 +36,16 @@
     "tsdown": "^0.11.9",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
+    "valibot": "1.0.0",
     "vitest": "^3.1.3"
+  },
+  "peerDependencies": {
+    "valibot": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "valibot": {
+      "optional": true
+    }
   },
   "prettier": "@sxzz/prettier-config"
 }
