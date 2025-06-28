@@ -1,11 +1,12 @@
 import { email, minLength, number, object, parse, pipe, string } from 'valibot';
 import { describe, expect, test } from 'vitest';
-import { stdErr } from '.';
-import { valibotErr } from './valibot';
+import { makeSifter } from '.';
+import { staticErr } from './generic';
+import { handleValiError } from './valibot';
 
 describe('valibotErr', () => {
 	test('should return undefined for non-ValiError instances', () => {
-		const adapter = valibotErr();
+		const adapter = handleValiError();
 
 		expect(adapter(new Error('Regular error'))).toBeUndefined();
 		expect(adapter('string error')).toBeUndefined();
@@ -20,7 +21,7 @@ describe('valibotErr', () => {
 		try {
 			parse(schema, 'abc');
 		} catch (error) {
-			const adapter = valibotErr();
+			const adapter = handleValiError();
 			const result = adapter(error);
 
 			expect(result).toBeDefined();
@@ -43,7 +44,7 @@ describe('valibotErr', () => {
 				age: 'not-a-number',
 			});
 		} catch (error) {
-			const adapter = valibotErr();
+			const adapter = handleValiError();
 			const result = adapter(error);
 
 			expect(result).toBeDefined();
@@ -71,7 +72,7 @@ describe('valibotErr', () => {
 				},
 			});
 		} catch (error) {
-			const adapter = valibotErr();
+			const adapter = handleValiError();
 			const result = adapter(error);
 
 			expect(result).toBeDefined();
@@ -81,20 +82,20 @@ describe('valibotErr', () => {
 	});
 
 	test('should work correctly within makeStdErr adapter chain', () => {
-		const getErr = stdErr.make([valibotErr(), stdErr.fallback('Fallback error')]);
+		const sift = makeSifter(handleValiError(), staticErr('Fallback error'));
 
 		// Test with ValiError
 		const schema = pipe(string(), minLength(5, 'Too short'));
 		try {
 			parse(schema, 'abc');
 		} catch (valibotError) {
-			const result = getErr(valibotError);
+			const result = sift(valibotError);
 			expect(result.root).toEqual(['Too short']);
 			expect(result.form).toEqual({});
 		}
 
 		// Test with non-ValiError (should fallback to hardcoded error)
-		const result = getErr(new Error('Regular error'));
+		const result = sift(new Error('Regular error'));
 		expect(result.root).toEqual(['Fallback error']);
 		expect(result.form).toEqual({});
 	});
@@ -106,7 +107,7 @@ describe('valibotErr', () => {
 		try {
 			parse(schema, 123); // This will create a ValiError
 		} catch (error) {
-			const adapter = valibotErr();
+			const adapter = handleValiError();
 			const result = adapter(error);
 
 			expect(result).toBeDefined();
@@ -116,19 +117,19 @@ describe('valibotErr', () => {
 	});
 
 	test('should preserve error adapter chain behavior', () => {
-		const getErr = stdErr.make([valibotErr(), stdErr.fallback('Fallback message')]);
+		const sift = makeSifter(handleValiError(), staticErr('Fallback message'));
 
 		// Test that valibot errors are handled first
 		const schema = pipe(string(), minLength(3, 'Valibot error message'));
 		try {
 			parse(schema, 'ab');
 		} catch (valibotError) {
-			const result = getErr(valibotError);
+			const result = sift(valibotError);
 			expect(result.root).toContain('Valibot error message');
 		}
 
 		// Test that non-valibot errors fall through to hardcoded
-		const regularErrorResult = getErr(new Error('Regular error'));
+		const regularErrorResult = sift(new Error('Regular error'));
 		expect(regularErrorResult.root).toEqual(['Fallback message']);
 	});
 });

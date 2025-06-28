@@ -1,33 +1,31 @@
-import * as generic from './generic';
-
-export type StdErr = {
+export type SifterErr = {
 	root: string[];
 	form: Record<string, string[] | undefined>;
 };
 
-export type StdErrAdapter = (error: unknown) => Partial<StdErr> | undefined;
+export type ErrSieve = (error: unknown, sifter: Sifter) => Partial<SifterErr> | undefined;
 
-export const stdErr = {
-	errorInstance: generic.messageErr,
-	string: generic.stringErr,
-	fallback: generic.hardcodedErr,
-	make:
-		(adapters: StdErrAdapter[]) =>
-		(error: unknown): StdErr => {
-			const output: StdErr = {
-				root: [],
-				form: {},
-			};
+export type Sifter = (error: unknown) => SifterErr | undefined;
 
-			for (const adapter of adapters) {
-				const fromAdapter = adapter(error);
-				if (!fromAdapter) continue;
+export const makeSifter = (...sieves: ErrSieve[]): Sifter => {
+	const sifter: Sifter = (error) => {
+		const output: SifterErr = {
+			root: [],
+			form: {},
+		};
 
-				if (fromAdapter.root) output.root = fromAdapter.root;
-				if (fromAdapter.form) output.form = fromAdapter.form;
-				return output;
-			}
+		for (const sieve of sieves) {
+			const fromSieve = sieve(error, sifter);
+			if (!fromSieve) continue;
 
+			if (fromSieve.root) output.root = fromSieve.root;
+			if (fromSieve.form) output.form = fromSieve.form;
 			return output;
-		},
+		}
+
+		console.error('stdErr: no adapter handled the error', error);
+		throw new Error('stdErr: no adapter handled the error');
+	};
+
+	return sifter;
 };

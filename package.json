@@ -13,6 +13,7 @@
 	"exports": {
 		"./result": "./dist/result.js",
 		"./error": "./dist/error/index.js",
+		"./error/generic": "./dist/error/generic.js",
 		"./error/valibot": "./dist/error/valibot.js",
 		"./package.json": "./package.json"
 	},
