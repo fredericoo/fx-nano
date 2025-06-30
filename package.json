@@ -25,7 +25,7 @@
 		"lint:fix": "pnpm run lint --fix",
 		"build": "tsdown",
 		"dev": "tsdown --watch",
-		"test": "vitest",
+		"test": "vitest run",
 		"typecheck": "tsc --noEmit",
 		"format": "prettier --cache --write .",
 		"release": "bumpp && pnpm publish",
@@ -48,9 +48,6 @@
 		"valibot": {
 			"optional": true
 		}
-	},
-	"prettier": "@sxzz/prettier-config",
-	"dependencies": {
-		"effect": "^3.16.10"
 	}
+
 }

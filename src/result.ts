@@ -22,7 +22,29 @@ function fn<A extends any[], const E, const R>(
 	fn: (...args: A) => ResultAsync<E, R>,
 ): (...args: A) => SuperResultAsync<E, R>;
 function fn<A extends any[], const E, const R>(fn: (...args: A) => ResultMaybeAsync<E, R>) {
-	return fn as any;
+	const wrappedFn = (...args: A) => {
+		const result = fn(...args);
+
+		// Create a generator function that yields the result
+		const generator = function* (): Generator<ResultMaybeAsync<E, R>, ResultMaybeAsync<E, R>, any> {
+			if (result instanceof Promise) {
+				return yield result;
+			}
+			return yield result;
+		};
+
+		// Make the function callable both ways:
+		// 1. As a regular function (returns the result directly)
+		// 2. As a generator (via yield* or [Symbol.iterator])
+		const returnFn = () => result;
+
+		// Add generator capabilities
+		returnFn[Symbol.iterator] = generator;
+
+		return returnFn;
+	};
+
+	return wrappedFn as any;
 }
 
 export const fx = {
