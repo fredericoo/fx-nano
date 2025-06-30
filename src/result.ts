@@ -16,11 +16,13 @@ type ResultMaybeAsync<E, R> = Result<E, R> | ResultAsync<E, R>;
 type SuperResult<E, R> = Generator<Result<E, R>, R, any>;
 type SuperResultAsync<E, R> = Generator<Result<E, R>, R, any>;
 
-function fn<A extends any[], const E, const R>(fn: (...args: A) => Result<E, R>): (...args: A) => SuperResult<E, R>;
-function fn<A extends any[], const E, const R>(
+export function fn<A extends any[], const E, const R>(
+	fn: (...args: A) => Result<E, R>,
+): (...args: A) => SuperResult<E, R>;
+export function fn<A extends any[], const E, const R>(
 	fn: (...args: A) => ResultAsync<E, R>,
 ): (...args: A) => SuperResultAsync<E, R>;
-function fn<A extends any[], const E, const R>(fn: (...args: A) => ResultMaybeAsync<E, R>) {
+export function fn<A extends any[], const E, const R>(fn: (...args: A) => ResultMaybeAsync<E, R>) {
 	const wrappedFn = (...args: A) => {
 		const result = fn(...args);
 
@@ -46,58 +48,58 @@ function fn<A extends any[], const E, const R>(fn: (...args: A) => ResultMaybeAs
 	return wrappedFn as any;
 }
 
-export const fx = {
-	fn,
-	/** Runs a function in a safe context. If the function throws, it will return a failure result.
-	 * @example
-	 * const result = fx.run(() => {
-	 *   if (Math.random() > 0.5) {
-	 *     return fx.err("Completely random error");
-	 *   }
-	 *   return fx.ok(1);
-	 * });
-	 *
-	 * console.log(result); // Result<"Completely random error" | UnhandledError, 1>
-	 *
-	 * const result2 = fx.run(() => {
-	 *   throw new Error('Error');
-	 * });
-	 *
-	 * console.log(result2); // [UnhandledError, null]
-	 */
-	run: <const E, const R>(fn: (...args: any) => Result<E, R>): Result<E | UnhandledError, R> => {
-		try {
-			return fn();
-		} catch (error) {
-			return fx.err(new UnhandledError(error));
-		}
-	},
-	/** Runs an asynchronous function in a safe context. If the function throws, it will return a failure result.
-	 * @example
-	 * const promiseToRun = fx.fn(async ()=>fx.ok(true));
-	 * const result = await fx.runPromise(promiseToRun());
-	 *
-	 * console.log(result); // Result<UnhandledError, true>
-	 */
-	runPromise: async <const E, const R>(promise: ResultAsync<E, R>): ResultAsync<E | UnhandledError, R> => {
-		try {
-			return await promise;
-		} catch (error) {
-			return Promise.resolve(fx.err(new UnhandledError(error)));
-		}
-	},
-	/** Marks a successful result.
-	 * @example
-	 * const result = fx.ok(1);
-	 *
-	 * console.log(result); // [null, 1]
-	 */
-	ok: <const R>(success: R): Success<R> => [null, success],
-	/** Marks a failure result.
-	 * @example
-	 * const result = fx.err("API error");
-	 *
-	 * console.log(result); // ["API error", null]
-	 */
-	err: <const E>(error: E): Failure<E> => [error, null],
+/** Runs a function in a safe context. If the function throws, it will return a failure result.
+ * @example
+ * const result = run(() => {
+ *   if (Math.random() > 0.5) {
+ *     return err("Completely random error");
+ *   }
+ *   return ok(1);
+ * });
+ *
+ * console.log(result); // Result<"Completely random error" | UnhandledError, 1>
+ *
+ * const result2 = run(() => {
+ *   throw new Error('Error');
+ * });
+ *
+ * console.log(result2); // [UnhandledError, null]
+ */
+export const run = <const E, const R>(fn: (...args: any) => Result<E, R>): Result<E | UnhandledError, R> => {
+	try {
+		return fn();
+	} catch (error) {
+		return err(new UnhandledError(error));
+	}
 };
+
+/** Runs an asynchronous function in a safe context. If the function throws, it will return a failure result.
+ * @example
+ * const promiseToRun = fn(async ()=>ok(true));
+ * const result = await runPromise(promiseToRun());
+ *
+ * console.log(result); // Result<UnhandledError, true>
+ */
+export const runPromise = async <const E, const R>(promise: ResultAsync<E, R>): ResultAsync<E | UnhandledError, R> => {
+	try {
+		return await promise;
+	} catch (error) {
+		return Promise.resolve(err(new UnhandledError(error)));
+	}
+};
+
+/** Marks a successful result.
+ * @example
+ * const result = ok(1);
+ *
+ * console.log(result); // [null, 1]
+ */
+export const ok = <const R>(success: R): Success<R> => [null, success];
+
+/** Marks a failure result.
+ * @example
+ * const result = err("API error");
+ *
+ * console.log(result); // ["API error", null]
+ */
+export const err = <const E>(error: E): Failure<E> => [error, null];

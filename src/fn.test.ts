@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { gen } from './gen';
-import { fx } from './result';
+import { fx } from './fx';
 
 describe('fn function', () => {
 	test('should work outside of generator context (compatibility)', () => {
@@ -28,7 +27,7 @@ describe('fn function', () => {
 			return fx.ok('generator success');
 		});
 
-		const result = gen(function* () {
+		const result = fx.gen(function* () {
 			const a = yield* doStuff();
 			return a;
 		});
@@ -41,7 +40,7 @@ describe('fn function', () => {
 			return fx.err('generator error');
 		});
 
-		const result = gen(function* () {
+		const result = fx.gen(function* () {
 			const a = yield* doStuff();
 			return `This should not be reached: ${a}`;
 		});
@@ -62,7 +61,7 @@ describe('fn function', () => {
 		let errorCount = 0;
 
 		for (let i = 0; i < 20; i++) {
-			const result = gen(function* () {
+			const result = fx.gen(function* () {
 				const a = yield* randomStuff();
 				return a;
 			});
@@ -99,13 +98,13 @@ describe('fn function', () => {
 		expect(directErrorArray).toEqual([['Negative numbers not allowed', null]]);
 
 		// Test inside generator
-		const genResult = gen(function* () {
+		const genResult = fx.gen(function* () {
 			const sum = yield* addNumbers(10, 20);
 			return sum * 2;
 		});
 		expect(genResult).toEqual([null, 60]);
 
-		const genError = gen(function* () {
+		const genError = fx.gen(function* () {
 			const sum = yield* addNumbers(-5, 10);
 			return sum * 2;
 		});

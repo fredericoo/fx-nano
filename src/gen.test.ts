@@ -1,10 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { gen } from './gen';
-import { fx } from './result';
+import { UnhandledError, fx } from './fx';
 
 describe('gen function', () => {
 	test('should handle successful generator with single yield', () => {
-		const result = gen(function* () {
+		const result = fx.gen(function* () {
 			const value = yield fx.ok('test value');
 			return value;
 		});
@@ -13,7 +12,7 @@ describe('gen function', () => {
 	});
 
 	test('should handle error result and abort generator', () => {
-		const result = gen(function* () {
+		const result = fx.gen(function* () {
 			const value = yield fx.err('test error');
 			return `This should not be reached: ${value}`;
 		});
@@ -22,7 +21,7 @@ describe('gen function', () => {
 	});
 
 	test('should handle multiple successful yields', () => {
-		const result = gen(function* () {
+		const result = fx.gen(function* () {
 			const first = yield fx.ok('first');
 			const second = yield fx.ok('second');
 			return `${first}-${second}`;
@@ -32,7 +31,7 @@ describe('gen function', () => {
 	});
 
 	test('should abort on first error in multiple yields', () => {
-		const result = gen(function* () {
+		const result = fx.gen(function* () {
 			const first = yield fx.ok('first');
 			const second = yield fx.err('second error');
 			const third = yield fx.ok('third');
@@ -44,7 +43,7 @@ describe('gen function', () => {
 
 	test('should handle generator with no yields', () => {
 		// biome-ignore lint/correctness/useYield: test case
-		const result = gen(function* () {
+		const result = fx.gen(function* () {
 			// @ts-ignore
 			// This generator intentionally has no yields to test that case
 			return 'direct return';
@@ -54,25 +53,29 @@ describe('gen function', () => {
 	});
 
 	test('should throw error for non-result tuple yields', () => {
-		expect(() => {
-			gen(function* () {
-				yield 'not a result tuple';
-				return 'test';
-			});
-		}).toThrow('Yielded value must be a Result tuple [error, value]');
+		const [error] = fx.gen(function* () {
+			yield 'not a result tuple';
+			return 'test';
+		});
+
+		expect(error).toBeInstanceOf(UnhandledError);
+		expect(error?.originalError).toBeInstanceOf(Error);
+		expect((error?.originalError as Error)?.message).toBe('Yielded value must be a Result tuple [error, value]');
 	});
 
 	test('should throw error for invalid array yields', () => {
-		expect(() => {
-			gen(function* () {
-				yield [1, 2, 3]; // Wrong length
-				return 'test';
-			});
-		}).toThrow('Yielded value must be a Result tuple [error, value]');
+		const [error] = fx.gen(function* () {
+			yield [1, 2, 3]; // Wrong length
+			return 'test';
+		});
+
+		expect(error).toBeInstanceOf(UnhandledError);
+		expect(error?.originalError).toBeInstanceOf(Error);
+		expect((error?.originalError as Error)?.message).toBe('Yielded value must be a Result tuple [error, value]');
 	});
 
 	test('should handle complex nested logic', () => {
-		const result = gen(function* () {
+		const result = fx.gen(function* () {
 			const a = yield fx.ok(5);
 			const b = yield fx.ok(10);
 
@@ -101,7 +104,7 @@ describe('fx.fn integration with fx.gen', () => {
 			return fx.ok({ userId, bio: 'Developer', posts: 42 });
 		});
 
-		const result = gen(function* () {
+		const result = fx.gen(function* () {
 			const user = yield* getUserData(123);
 			const profile = yield* getProfile(user.id);
 
@@ -134,7 +137,7 @@ describe('fx.fn integration with fx.gen', () => {
 			return fx.ok({ userId, bio: 'Developer' });
 		});
 
-		const result = gen(function* () {
+		const result = fx.gen(function* () {
 			const user = yield* getUserData(-1); // This will fail
 			const profile = yield* getProfile(user.id); // This should not execute
 
@@ -152,7 +155,7 @@ describe('fx.fn integration with fx.gen', () => {
 			return fx.err('Input too short');
 		});
 
-		const result = gen(function* () {
+		const result = fx.gen(function* () {
 			const validated = yield* validateInput('hello');
 			const timestamp = yield fx.ok(Date.now());
 			const processed = yield fx.ok(`${validated}_${timestamp}`);
@@ -190,7 +193,7 @@ describe('fx.fn integration with fx.gen', () => {
 		});
 
 		// Test admin path
-		const adminResult = gen(function* () {
+		const adminResult = fx.gen(function* () {
 			const access = yield* checkAccess(15);
 			const result = yield* performOperation(access);
 			return result;
@@ -199,7 +202,7 @@ describe('fx.fn integration with fx.gen', () => {
 		expect(adminResult).toEqual([null, 'Operation completed for admin']);
 
 		// Test user path
-		const userResult = gen(function* () {
+		const userResult = fx.gen(function* () {
 			const access = yield* checkAccess(7);
 			const result = yield* performOperation(access);
 			return result;
@@ -208,7 +211,7 @@ describe('fx.fn integration with fx.gen', () => {
 		expect(userResult).toEqual([null, 'Operation completed for user']);
 
 		// Test error path
-		const errorResult = gen(function* () {
+		const errorResult = fx.gen(function* () {
 			const access = yield* checkAccess(2);
 			const result = yield* performOperation(access); // Should not execute
 			return result;
@@ -238,7 +241,7 @@ describe('fx.fn integration with fx.gen', () => {
 		});
 
 		// Test successful chain
-		const successResult = gen(function* () {
+		const successResult = fx.gen(function* () {
 			const parsed = yield* parseNumber('5');
 			const validated = yield* validatePositive(parsed);
 			const squared = yield* calculateSquare(validated);
@@ -262,7 +265,7 @@ describe('fx.fn integration with fx.gen', () => {
 		]);
 
 		// Test parsing error
-		const parseError = gen(function* () {
+		const parseError = fx.gen(function* () {
 			const parsed = yield* parseNumber('abc');
 			const validated = yield* validatePositive(parsed);
 			const squared = yield* calculateSquare(validated);
@@ -273,7 +276,7 @@ describe('fx.fn integration with fx.gen', () => {
 		expect(parseError).toEqual(['Cannot parse "abc" as number', null]);
 
 		// Test validation error
-		const validationError = gen(function* () {
+		const validationError = fx.gen(function* () {
 			const parsed = yield* parseNumber('-5');
 			const validated = yield* validatePositive(parsed);
 			const squared = yield* calculateSquare(validated);
@@ -302,7 +305,7 @@ describe('fx.fn integration with fx.gen', () => {
 			return fx.err('No posts found');
 		});
 
-		const result = gen(function* () {
+		const result = fx.gen(function* () {
 			const user = yield* getUser(1);
 			const posts = yield* getUserPosts(user.id);
 

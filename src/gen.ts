@@ -1,8 +1,8 @@
-import { type Result, fx } from './result';
+import { type Result, UnhandledError, err, ok } from './result';
 
 function gen<TResult, TYield>(
 	f: () => Generator<TYield, TResult, any>,
-): Result<TYield extends Result<infer E, any> ? E : never, TResult> {
+): Result<TYield extends Result<infer E, any> ? E | UnhandledError : UnhandledError, TResult> {
 	const generator = f();
 	let current = generator.next();
 
@@ -11,7 +11,7 @@ function gen<TResult, TYield>(
 
 		// Check if it's a result tuple [error, value] or [null, value]
 		if (!Array.isArray(yielded) || yielded.length !== 2) {
-			throw new Error('Yielded value must be a Result tuple [error, value]');
+			return err(new UnhandledError(new Error('Yielded value must be a Result tuple [error, value]'))) as any;
 		}
 
 		const [error, value] = yielded as [any, any];
@@ -26,20 +26,7 @@ function gen<TResult, TYield>(
 	}
 
 	// Return the final result as success
-	return fx.ok(current.value) as any;
+	return ok(current.value) as any;
 }
-
-const doStuff = fx.fn(() => {
-	if (Math.random() > 0.5) {
-		return fx.ok('success in doStuff');
-	}
-	return fx.err('error in doStuff');
-});
-
-export const res = gen(function* () {
-	const a = yield* doStuff();
-
-	return a;
-});
 
 export { gen };

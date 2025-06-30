@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { UnhandledError, fx } from './result';
+import { UnhandledError, fx } from './fx';
 
 test('fx.run - successful execution returning fx.ok', () => {
 	const result = fx.run(() => {
