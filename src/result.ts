@@ -9,19 +9,23 @@ export class UnhandledError extends Error {
 
 type Success<R> = readonly [null, R];
 type Failure<E> = readonly [E, null];
-type Result<E, R> = Success<R> | Failure<E>;
+export type Result<E, R> = Success<R> | Failure<E>;
 export type ResultAsync<E, R> = Promise<Result<E, Awaited<R>>>;
 type ResultMaybeAsync<E, R> = Result<E, R> | ResultAsync<E, R>;
 
-function fn<A extends any[], const E, const R>(fn: (...args: A) => Result<E, R>): (...args: A) => Result<E, R>;
+export type SuperResult<E, R> = Generator<Result<E, R>, R, any>;
+export type SuperResultAsync<E, R> = Generator<Result<E, R>, R, any>;
+export type SuperResultMaybeAsync<E, R> = SuperResult<E, R> | SuperResultAsync<E, R>;
+
+function fn<A extends any[], const E, const R>(fn: (...args: A) => Result<E, R>): (...args: A) => SuperResult<E, R>;
 function fn<A extends any[], const E, const R>(
 	fn: (...args: A) => ResultAsync<E, R>,
-): (...args: A) => ResultAsync<E, R>;
+): (...args: A) => SuperResultAsync<E, R>;
 function fn<A extends any[], const E, const R>(fn: (...args: A) => ResultMaybeAsync<E, R>) {
-	return fn;
+	return fn as any;
 }
 
-export const fg = {
+export const fx = {
 	fn,
 	/** Runs a function in a safe context. If the function throws, it will return a failure result.
 	 * @example
@@ -44,7 +48,7 @@ export const fg = {
 		try {
 			return fn();
 		} catch (error) {
-			return fg.err(new UnhandledError(error));
+			return fx.err(new UnhandledError(error));
 		}
 	},
 	/** Runs an asynchronous function in a safe context. If the function throws, it will return a failure result.
@@ -58,7 +62,7 @@ export const fg = {
 		try {
 			return await promise;
 		} catch (error) {
-			return Promise.resolve(fg.err(new UnhandledError(error)));
+			return Promise.resolve(fx.err(new UnhandledError(error)));
 		}
 	},
 	/** Marks a successful result.

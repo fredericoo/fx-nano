@@ -49,5 +49,8 @@
 			"optional": true
 		}
 	},
-	"prettier": "@sxzz/prettier-config"
+	"prettier": "@sxzz/prettier-config",
+	"dependencies": {
+		"effect": "^3.16.10"
+	}
 }
