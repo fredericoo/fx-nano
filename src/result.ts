@@ -13,9 +13,8 @@ export type Result<E, R> = Success<R> | Failure<E>;
 export type ResultAsync<E, R> = Promise<Result<E, Awaited<R>>>;
 type ResultMaybeAsync<E, R> = Result<E, R> | ResultAsync<E, R>;
 
-export type SuperResult<E, R> = Generator<Result<E, R>, R, any>;
-export type SuperResultAsync<E, R> = Generator<Result<E, R>, R, any>;
-export type SuperResultMaybeAsync<E, R> = SuperResult<E, R> | SuperResultAsync<E, R>;
+type SuperResult<E, R> = Generator<Result<E, R>, R, any>;
+type SuperResultAsync<E, R> = Generator<Result<E, R>, R, any>;
 
 function fn<A extends any[], const E, const R>(fn: (...args: A) => Result<E, R>): (...args: A) => SuperResult<E, R>;
 function fn<A extends any[], const E, const R>(
